@@ -41,7 +41,7 @@ ReportInfo.mat
 *.o
 
 # Other files
-uavrt_tag_analyzer
+exe_git_ignore
 test_data.bin
 *.prj
 *.asv
