@@ -22,32 +22,32 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-int c_FFTImplementationCallback_dob(
+int FFTImplementationCallback_dobluesteinfft(
     const double x_data[], int x_size, int n2blue, int nfft,
     const double costab_data[], const int costab_size[2],
     const double sintab_data[], const int sintab_size[2],
     const double sintabinv_data[], const int sintabinv_size[2],
     creal_T y_data[]);
 
-void c_FFTImplementationCallback_gen(int nRows, boolean_T useRadix2,
-                                     double costab_data[], int costab_size[2],
-                                     double sintab_data[], int sintab_size[2],
-                                     double sintabinv_data[],
-                                     int sintabinv_size[2]);
+void FFTImplementationCallback_generate_twiddle_tables(
+    int nRows, boolean_T useRadix2, double costab_data[], int costab_size[2],
+    double sintab_data[], int sintab_size[2], double sintabinv_data[],
+    int sintabinv_size[2]);
 
-int c_FFTImplementationCallback_get(int nfft, boolean_T useRadix2, int *nRows);
+int FFTImplementationCallback_get_algo_sizes(int nfft, boolean_T useRadix2,
+                                             int *nRows);
 
-int c_FFTImplementationCallback_r2b(const double x_data[], int x_size,
-                                    int n1_unsigned, const double costab_data[],
-                                    const int costab_size[2],
-                                    const double sintab_data[],
-                                    creal_T y_data[]);
+int FFTImplementationCallback_r2br_r2dit_trig(const double x_data[], int x_size,
+                                              int n1_unsigned,
+                                              const double costab_data[],
+                                              const int costab_size[2],
+                                              const double sintab_data[],
+                                              creal_T y_data[]);
 
-void d_FFTImplementationCallback_r2b(const emxArray_creal_T *x,
-                                     int unsigned_nRows,
-                                     const emxArray_real_T *costab,
-                                     const emxArray_real_T *sintab,
-                                     emxArray_creal_T *y);
+void FFTImplementationCallback_r2br_r2dit_trig_impl(
+    const emxArray_creal_T *x, int unsigned_nRows,
+    const emxArray_real_T *costab, const emxArray_real_T *sintab,
+    emxArray_creal_T *y);
 
 #ifdef __cplusplus
 }

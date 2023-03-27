@@ -66,17 +66,17 @@ void b_fft(const double x_data[], const int x_size[2], double varargin_1,
     boolean_T useRadix2;
     useRadix2 = (((int)varargin_1 > 0) &&
                  (((int)varargin_1 & ((int)varargin_1 - 1)) == 0));
-    N2blue =
-        c_FFTImplementationCallback_get((int)varargin_1, useRadix2, &nRows);
-    c_FFTImplementationCallback_gen(nRows, useRadix2, costab_data, costab_size,
-                                    sintab_data, sintab_size, sintabinv_data,
-                                    sintabinv_size);
+    N2blue = FFTImplementationCallback_get_algo_sizes((int)varargin_1,
+                                                      useRadix2, &nRows);
+    FFTImplementationCallback_generate_twiddle_tables(
+        nRows, useRadix2, costab_data, costab_size, sintab_data, sintab_size,
+        sintabinv_data, sintabinv_size);
     if (useRadix2) {
-      c_FFTImplementationCallback_r2b(x_data, x_size[1], (int)varargin_1,
-                                      costab_data, costab_size, sintab_data,
-                                      yCol_data);
+      FFTImplementationCallback_r2br_r2dit_trig(
+          x_data, x_size[1], (int)varargin_1, costab_data, costab_size,
+          sintab_data, yCol_data);
     } else {
-      c_FFTImplementationCallback_dob(
+      FFTImplementationCallback_dobluesteinfft(
           x_data, x_size[1], N2blue, (int)varargin_1, costab_data, costab_size,
           sintab_data, sintab_size, sintabinv_data, sintabinv_size, yCol_data);
     }
@@ -133,7 +133,8 @@ void c_fft(const emxArray_creal_T *x, emxArray_creal_T *y)
     int rt;
     boolean_T useRadix2;
     useRadix2 = ((x->size[0] & (x->size[0] - 1)) == 0);
-    N2blue = c_FFTImplementationCallback_get(x->size[0], useRadix2, &nd2);
+    N2blue =
+        FFTImplementationCallback_get_algo_sizes(x->size[0], useRadix2, &nd2);
     nt_re = 6.2831853071795862 / (double)nd2;
     rt = nd2 / 2 / 2;
     emxInit_real_T(&costab1q, 2);
@@ -224,7 +225,8 @@ void c_fft(const emxArray_creal_T *x, emxArray_creal_T *y)
     }
     emxFree_real_T(&costab1q);
     if (useRadix2) {
-      d_FFTImplementationCallback_r2b(x, x->size[0], costab, sintab, y);
+      FFTImplementationCallback_r2br_r2dit_trig_impl(x, x->size[0], costab,
+                                                     sintab, y);
     } else {
       double b_re_tmp;
       double nt_im;
@@ -283,10 +285,12 @@ void c_fft(const emxArray_creal_T *x, emxArray_creal_T *y)
         y_data[k - 1].im = 0.0;
       }
       emxInit_creal_T(&fy);
-      d_FFTImplementationCallback_r2b(y, N2blue, costab, sintab, fy);
+      FFTImplementationCallback_r2br_r2dit_trig_impl(y, N2blue, costab, sintab,
+                                                     fy);
       fy_data = fy->data;
       emxInit_creal_T(&fv);
-      d_FFTImplementationCallback_r2b(wwc, N2blue, costab, sintab, fv);
+      FFTImplementationCallback_r2br_r2dit_trig_impl(wwc, N2blue, costab,
+                                                     sintab, fv);
       fv_data = fv->data;
       nd2 = fy->size[0];
       for (i = 0; i < nd2; i++) {
@@ -297,7 +301,8 @@ void c_fft(const emxArray_creal_T *x, emxArray_creal_T *y)
         fy_data[i].re = nt_re * b_re_tmp - re_tmp * nt_im;
         fy_data[i].im = nt_re * nt_im + re_tmp * b_re_tmp;
       }
-      d_FFTImplementationCallback_r2b(fy, N2blue, costab, sintabinv, fv);
+      FFTImplementationCallback_r2br_r2dit_trig_impl(fy, N2blue, costab,
+                                                     sintabinv, fv);
       fv_data = fv->data;
       emxFree_creal_T(&fy);
       if (fv->size[0] > 1) {
@@ -349,15 +354,17 @@ void fft(const double x_data[], const int x_size[2], creal_T y_data[],
     int N2blue;
     boolean_T useRadix2;
     useRadix2 = ((x_size[1] & (x_size[1] - 1)) == 0);
-    N2blue = c_FFTImplementationCallback_get(x_size[1], useRadix2, &nRows);
-    c_FFTImplementationCallback_gen(nRows, useRadix2, costab_data, costab_size,
-                                    sintab_data, sintab_size, sintabinv_data,
-                                    sintabinv_size);
+    N2blue =
+        FFTImplementationCallback_get_algo_sizes(x_size[1], useRadix2, &nRows);
+    FFTImplementationCallback_generate_twiddle_tables(
+        nRows, useRadix2, costab_data, costab_size, sintab_data, sintab_size,
+        sintabinv_data, sintabinv_size);
     if (useRadix2) {
-      c_FFTImplementationCallback_r2b(x_data, x_size[1], x_size[1], costab_data,
-                                      costab_size, sintab_data, yCol_data);
+      FFTImplementationCallback_r2br_r2dit_trig(x_data, x_size[1], x_size[1],
+                                                costab_data, costab_size,
+                                                sintab_data, yCol_data);
     } else {
-      c_FFTImplementationCallback_dob(
+      FFTImplementationCallback_dobluesteinfft(
           x_data, x_size[1], N2blue, x_size[1], costab_data, costab_size,
           sintab_data, sintab_size, sintabinv_data, sintabinv_size, yCol_data);
     }

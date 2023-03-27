@@ -7,10 +7,15 @@
 
 %% Create configuration object of class 'coder.CodeConfig'.
 cfg = coder.config('exe','ecoder',false);
+cfg.HardwareImplementation.ProdEqTarget = false;
+cfg.TargetLang = 'C';
+cfg.GenCodeOnly = true;
 cfg.CustomInclude = { '/Users/mshafer/Library/CloudStorage/OneDrive-NorthernArizonaUniversity/CODE_PLAYGROUND/uavrt_tag_analyzer/custom_mains' };
 cfg.CustomSource = { '/Users/mshafer/Library/CloudStorage/OneDrive-NorthernArizonaUniversity/CODE_PLAYGROUND/uavrt_tag_analyzer/custom_mains/main.c' };
 cfg.GenerateExampleMain = 'DoNotGenerate';
+cfg.GenerateMakefile = false;
 cfg.GenerateReport = true;
+cfg.MaxIdLength = 1024;
 cfg.ReportPotentialDifferences = false;
 cfg.RuntimeChecks = true;
 
