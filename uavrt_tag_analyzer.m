@@ -1,9 +1,25 @@
-function [] = uavrt_tag_analyzer(FsRawInput, tp, centerFreqMHz, filePath)
+%function [] = uavrt_tag_analyzer(FsRawInput, tp, centerFreqMHz, filePath)
+function [] = uavrt_tag_analyzer(FsRawInput, tp, centerFreqMHz, tagName, path)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 FsRaw = uint32(FsRawInput);
 Fs = 10000;
+
+airspyInstallLocation = system(sprintf('which %s','airspy_rx'));
+
+dataTimeDuration = 30;
+currTimeStr = char(datetime('now','Format','yyyy-MM-dd_HH:mm:ss.SSS'));
+dataFileName = ['Characterization_',tagName,'_',currTimeStr,'.bin'];
+filePath = fullfile(path,dataFileName);
+nSamps = uint64(dataTimeDuration * FsRawInput);
+sysCommand = sprintf('/usr/local/bin/airspy_rx -f %f -r %s -a %u -t 0 -n %u -d -h 21',...
+                centerFreqMHz, filePath, FsRaw, nSamps);
+fprintf('Collecting data for %f seconds...\n', dataTimeDuration);
+system(sysCommand)
+fprintf('complete\n.')
+%coder.ceval('system',sysCommand)
+
 
 %Debugging
 % fprintf('FsRawInput %f \n',FsRawInput)
@@ -75,10 +91,10 @@ fprintf('Done.\n')
 % fprintf('Done.\n')
 
 n_dec = length(dataDecimated);
-dataAbsDecimated = abs(dataDecimated);
-[~,edges] = histcounts(dataAbsDecimated,10);
+dataMoveMeanAbsDecimated = movmean(abs(dataDecimated), 10);
+[~,edges] = histcounts(dataMoveMeanAbsDecimated,10);
 threshold = edges(8);
-dataThresholded = dataAbsDecimated;
+dataThresholded = dataMoveMeanAbsDecimated;
 dataThresholded(dataThresholded >= threshold) = 1;
 dataThresholded(dataThresholded < threshold) = 0;
 
@@ -133,15 +149,25 @@ n_pulseOnly = length(pulseOnly);
 f = (-n_pulseOnly/2:n_pulseOnly/2-1)/n_pulseOnly*Fs;
 peakFreq = f(maxFFTInd);
 
+[dtClean_ci] = getConfidenceInterval(dtClean);
+[pulseDur_ci] = getConfidenceInterval(pulseDurRecord);
+dtClean_ci = round(dtClean_ci*100000)/100000;
+pulseDur_ci = round(pulseDur_ci*100000)/100000;
+ 
+dt95Bounds = round((dtClean_ci-dtMean)*10000)/1000;
+pulseDur95Bounds = round((pulseDur_ci-pulseDurMean)*10000)/1000;
+
 pulseFreqMHz = centerFreqMHz + peakFreq/1e6;
 fprintf('---------TAG REPORT---------\n', centerFreqMHz)
 fprintf('Radio Frequency:       %.6f MHz\n', centerFreqMHz)
 fprintf('Pulse Frequency:       %.6f MHz\n', pulseFreqMHz)
 fprintf('Frequency Deviation:   %.6f Hz\n', (pulseFreqMHz - centerFreqMHz)*1e6)
 fprintf('Interpulse Time:       %.6f s\n', dtMean)
-fprintf('Interpulse Time Stdev: %.6f s\n', dtStd)
+%fprintf('Interpulse Time Stdev: %.6f s\n', dtStd)
+fprintf('Interpulse Time 95%% Bound: %.4f, %.4f s\n', dt95Bounds(1),dt95Bounds(2))
 fprintf('Pulse Mean Duration:   %.6f s\n', pulseDurMean)
-fprintf('Pulse Duration Stdev:  %.6f s\n', pulseDurStd)
+%fprintf('Pulse Duration Stdev:  %.6f s\n', pulseDurStd)
+fprintf('Pulse Duration 95%% Bound: %.4f, %.4f s\n', pulseDur95Bounds(1), pulseDur95Bounds(2))
 fprintf('----------------------------\n', centerFreqMHz)
 
 % if ~isdeployed
@@ -149,4 +175,20 @@ fprintf('----------------------------\n', centerFreqMHz)
 %     sound(real(dataDecimated(first5SecInds)),Fs)
 % end
 
+
+
+end
+
+function [ci] = getConfidenceInterval(x)
+%from help https://www.mathworks.com/help/stats/tinv.html
+n = numel(x);
+xbar = mean(x);
+se = std(x)/sqrt(n);
+nu = n - 1;
+conf = 0.95;
+alpha = 1 - conf;
+pLo = alpha/2;
+pUp = 1 - alpha/2;
+crit = tinv([pLo pUp], nu);
+ci = xbar + crit*se;
 end
